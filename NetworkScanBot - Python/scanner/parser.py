@@ -4,16 +4,26 @@ def parse_scan(saida):
 
     dispositivos = []
 
-    ips = re.findall(r"Nmap scan report for (.*)", saida)
-    macs = re.findall(r"MAC Address: ([A-F0-9:]+) \((.*?)\)", saida)
+    blocos = saida.split("Nmap scan report for ")
 
-    for i in range(len(macs)):
+    for bloco in blocos[1:]:
+
+        linhas = bloco.split("\n")
+        ip = linhas[0].strip()
+
+        mac_match = re.search(r"MAC Address: ([A-F0-9:]+) \((.*?)\)", bloco)
+
+        if mac_match:
+            mac = mac_match.group(1)
+            fabricante = mac_match.group(2)
+        else:
+            mac = None
+            fabricante = None
 
         dispositivos.append({
-            "ip": ips[i],
-            "mac": macs[i][0],
-            "fabricante": macs[i][1]
-            
+            "ip": ip,
+            "mac": mac,
+            "fabricante": fabricante
         })
-        
+
     return dispositivos

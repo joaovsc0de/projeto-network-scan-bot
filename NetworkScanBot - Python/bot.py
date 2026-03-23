@@ -4,8 +4,8 @@ import telebot
 from scanner.nmap_scanner import scan_rede
 from scanner.parser import parse_scan
 from monitor.monitor_rede import registrar_dispositivos
-from database.mysql_db import listar_dispositivos, listar_dispositivos_conectados, resetar_conexoes
-
+from database.Network_db import listar_dispositivos, listar_dispositivos_conectados, resetar_conexoes
+from utils.network_utils import get_rede_atual
 import config
 
 bot = telebot.TeleBot(config.TOKEN)
@@ -15,13 +15,31 @@ bot = telebot.TeleBot(config.TOKEN)
 def scan(msg):
 
     resetar_conexoes()
-    saida = scan_rede()
+
+    args = msg.text.split()
+
+    # 👇 se usuário passou rede
+    if len(args) > 1:
+        network = args[1]
+    else:
+        network = get_rede_atual()
+
+    if not network:
+        bot.reply_to(msg, "Não foi possível detectar a rede automaticamente.")
+        return
+
+    bot.reply_to(msg, f"Escaneando rede: {network}...")
+
+    saida = scan_rede(network)
 
     dispositivos = parse_scan(saida)
 
     registrar_dispositivos(dispositivos)
 
-    bot.reply_to(msg,"Scan finalizado")
+    bot.reply_to(
+        msg,
+        f"Scan finalizado\nDispositivos encontrados: {len(dispositivos)}"
+    )
 
 @bot.message_handler(commands=['dispositivos'])
 def dispositivos(msg):  

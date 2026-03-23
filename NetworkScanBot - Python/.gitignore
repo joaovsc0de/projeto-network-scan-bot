@@ -1,2 +1,4 @@
 __pycache__/
 config.py
+Network_db.py
+venv/
