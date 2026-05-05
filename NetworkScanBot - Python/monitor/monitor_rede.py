@@ -7,27 +7,33 @@ from database.Network_db import (
 
 def registrar_dispositivos(lista):
 
-    print("Dispositivos recebidos:", lista)
-
     conn = conectar()
 
     if conn is None:
         print("Erro: conexão com banco falhou")
-        return
+        return 0
+
+    novos = 0
 
     for dispositivo in lista:
 
-        # 🔹 salva dispositivo e pega ID
-        dispositivo_id = salvar_dispositivo(dispositivo, conn)
+        dispositivo_id, eh_novo = salvar_dispositivo(dispositivo, conn)
 
-        # 🔥 NOVO: salvar portas (se existirem)
-        if "portas" in dispositivo and dispositivo["portas"]:
+        if eh_novo:
+            novos += 1
 
-            # evita duplicação
+        if not dispositivo_id:
+            continue
+
+        portas = dispositivo.get("portas", [])
+
+        if portas:
             deletar_portas(dispositivo_id, conn)
 
-            for porta in dispositivo["portas"]:
+            for porta in portas:
                 salvar_porta(dispositivo_id, porta, conn)
 
     conn.commit()
     conn.close()
+
+    return novos
